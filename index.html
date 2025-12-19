@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACL Matlab Programs</title>
+    <style>
+        :root {
+            --primary-bg: #1e1e1e;
+            --sidebar-bg: #252526;
+            --border-color: #3e3e42;
+            --text-main: #d4d4d4;
+            --text-header: #ffffff;
+            --accent: #d16d08; /* Matlab Orange */
+            --accent-hover: #b55d06;
+            --code-bg: #1e1e1e;
+            --output-bg: #000000;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            background-color: var(--primary-bg);
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 300px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background-color: #2d2d2d;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .sidebar-header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--text-header);
+            font-weight: 600;
+        }
+
+        .exp-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .exp-btn {
+            width: 100%;
+            text-align: left;
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            color: #969696;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .exp-btn:hover {
+            background-color: #2a2d2e;
+            color: white;
+            padding-left: 25px;
+        }
+
+        .exp-btn.active {
+            background-color: #37373d;
+            color: white;
+            border-left: 4px solid var(--accent);
+            font-weight: 600;
+        }
+
+        /* Main Content Styling */
+        .main-content {
+            flex: 1;
+            padding: 20px 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .header-area {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--text-header);
+        }
+
+        .section-container {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+            background-color: var(--code-bg);
+            display: flex;
+            flex-direction: column;
+            min-height: 200px;
+        }
+
+        .section-header {
+            background-color: #333333;
+            padding: 8px 15px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #f1f1f1;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .copy-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .copy-btn:hover {
+            background-color: var(--accent-hover);
+        }
+
+        pre {
+            margin: 0;
+            padding: 20px;
+            overflow: auto;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            white-space: pre-wrap; /* Wrap long lines */
+        }
+
+        #codeDisplay {
+            color: #dcdcaa;
+        }
+        
+        #outputDisplay {
+            color: #4ec9b0;
+            background-color: #111;
+        }
+
+        .placeholder-msg {
+            text-align: center;
+            margin-top: 100px;
+            color: #666;
+        }
+        
+        /* Error handling styles */
+        .error-msg {
+            color: #ff6b6b;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #1e1e1e; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>ACL Matlab Programs</h2>
+        </div>
+        <ul class="exp-list" id="expList">
+            <li style="padding: 20px; color: #888; text-align: center;">Loading...</li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="header-area">
+            <h1 id="expTitle">Select a Program</h1>
+        </div>
+
+        <div id="placeholder" class="placeholder-msg">
+            <p>Select a program from the sidebar to view the code.</p>
+        </div>
+
+        <div class="section-container" id="codeSection" style="display: none;">
+            <div class="section-header">
+                <span>Matlab Code</span>
+                <button class="copy-btn" onclick="copyCode()">Copy Code</button>
+            </div>
+            <pre id="codeDisplay"></pre>
+        </div>
+
+        <div class="section-container" id="outputSection" style="display: none;">
+            <div class="section-header">
+                <span>Output / Console</span>
+            </div>
+            <pre id="outputDisplay"></pre>
+        </div>
+    </div>
+
+    <script>
+        // Using window.onload to ensure full DOM is ready
+        window.onload = function() {
+            try {
+                // DATA DEFINITION
+                // Using backticks for multi-line strings. 
+                // Careful to escape backslashes if necessary, though usually safe in JS template literals.
+                const experiments = [
+                    {
+                        id: 1,
+                        title: "1. Fading and Doppler Effects",
+                        code: `% Fading and Doppler effects
+sampleRate500KHz = 500e3; % Sample rate of 500 KHz
+sampleRate20KHz = 20e3;   % Sample rate of 20 KHz
+
+maxDopplerShift = 200;    % Max Doppler shift of diffuse components (Hz)
+delayVector = (0:5:15)*1e-6; % Discrete delays of four-path channel (s)
+gainVector = [0 -3 -6 -9];   % Average path gains (dB)
+
+KFactor = 10; % Linear ratio of specular to diffuse power
+specDopplerShift = 100; % Doppler shift of specular component (Hz)
+
+% Configure Rayleigh Channel
+rayChan = comm.RayleighChannel(...
+    'SampleRate', sampleRate500KHz, ...
+    'PathDelays', delayVector, ...
+    'AveragePathGains', gainVector, ...
+    'MaximumDopplerShift', maxDopplerShift, ...
+    'RandomStream', 'mt19937ar with seed', ...
+    'Seed', 10, ...
+    'PathGainsOutputPort', true);
+
+% Configure Rician Channel
+ricChan = comm.RicianChannel(...
+    'SampleRate', sampleRate500KHz, ...
+    'PathDelays', delayVector, ...
+    'AveragePathGains', gainVector, ...
+    'KFactor', KFactor, ...
+    'DirectPathDopplerShift', specDopplerShift, ...
+    'MaximumDopplerShift', maxDopplerShift, ...
+    'RandomStream', 'mt19937ar with seed', ...
+    'Seed', 100, ...
+    'PathGainsOutputPort', true);
+
+M = 4; % QPSK modulation
+phaseoffset = pi/4; % Phase offset for QPSK
+bitsPerFrame = 1000;
+
+msg = randi([0 1], bitsPerFrame, 1);
+modSignal = pskmod(msg, M, phaseoffset, 'InputType', 'bit');
+
+rayChan(modSignal);
+ricChan(modSignal);
+
+release(rayChan);
+release(ricChan);
+
+% Visualization: Impulse and frequency responses
+figure(1);
+rayChan.Visualization = 'Impulse and frequency responses';
+rayChan.SamplesToDisplay = '100%'; 
+
+numFrames = 2;
+for i = 1:numFrames
+    msg = randi([0 1], bitsPerFrame, 1);
+    modSignal = pskmod(msg, M, phaseoffset, 'InputType', 'bit');
+    rayChan(modSignal);
+end
+
+release(rayChan);
+
+% Visualization: Doppler spectrum
+rayChan.Visualization = 'Doppler spectrum';
+numFrames = 5000;
+for i = 1:numFrames
+    msg = randi([0 1], bitsPerFrame, 1);
+    modSignal = pskmod(msg, M, phaseoffset, 'InputType', 'bit');
+    rayChan(modSignal);
+end
+
+release(rayChan);
+
+% Visualization: Impulse and frequency responses (Low Sample Rate)
+rayChan.Visualization = 'Impulse and frequency responses';
+rayChan.SampleRate = sampleRate20KHz;
+rayChan.SamplesToDisplay = '25%';
+
+numFrames = 2;
+for i = 1:numFrames
+    msg = randi([0 1], bitsPerFrame, 1);
+    modSignal = pskmod(msg, M, phaseoffset, 'InputType', 'bit');
+    rayChan(modSignal);
+end
+
+release(rayChan);
+
+% Single fading path with zero delay
+rayChan.PathDelays = 0;
+rayChan.AveragePathGains = 0; % Average path gain of 1 (0 dB)
+rayChan.Visualization = 'Off'; 
+ricChan.Visualization = 'Off';
+
+% Same sample rate and delay profile for Rician
+ricChan.SampleRate = rayChan.SampleRate;
+ricChan.PathDelays = rayChan.PathDelays;
+ricChan.AveragePathGains = rayChan.AveragePathGains;
+
+% Configure Time Scope
+gainScope = timescope(...
+    'SampleRate', rayChan.SampleRate, ...
+    'TimeSpanSource', 'Property', ...
+    'TimeSpan', bitsPerFrame/2/rayChan.SampleRate, ...
+    'Name', 'Multipath Gain', ...
+    'ChannelName', {'Rayleigh', 'Rician'}, ...
+    'ShowGrid', true, ...
+    'YLimits', [-40 10], ...
+    'YLabel', 'Gain (dB)');
+
+% Compare path gain outputs
+msg = randi([0 1], bitsPerFrame, 1);
+modSignal = pskmod(msg, M, phaseoffset, 'InputType', 'bit');
+
+[~, rayPathGain] = rayChan(modSignal);
+[~, ricPathGain] = ricChan(modSignal);
+
+gainScope(10*log10(abs([rayPathGain, ricPathGain]).^2));`,
+                        output: `(This experiment generates Time Scope and Spectrum Analyzer plots in a new window. No text console output.)
+
+Plots Generated:
+1. Impulse and Frequency Responses (High Sample Rate)
+2. Doppler Spectrum
+3. Impulse and Frequency Responses (Low Sample Rate)
+4. Multipath Gain comparison (Rayleigh vs Rician)`
+                    },
+                    {
+                        id: 2,
+                        title: "2. Channel Estimation (LTE)",
+                        code: `% CHANNEL ESTIMATION
+enb.NDLRB = 15;         % Number of resource blocks
+enb.CellRefP = 1;       % One transmit antenna port
+enb.NCellID = 10;       % Cell ID
+enb.CyclicPrefix = 'Normal'; % Normal cyclic prefix
+enb.DuplexMode = 'FDD'; % FDD
+
+SNRDB = 22;             % Desired SNR in dB
+SNR = 10^(SNRDB/20);    % Linear SNR
+
+rng('default');
+cfg.Seed = 1;
+cfg.NRxAnts = 1;        % 1 receive antenna
+cfg.DelayProfile = 'EVA'; % EVA delay spread
+cfg.DopplerFreq = 120;  % 120Hz Doppler frequency
+cfg.MIMOCorrelation = 'Low'; % Low (no) MIMO correlation
+cfg.InitTime = 0;       % Initialize at time zero
+cfg.NTerms = 16;        % Oscillators used in fading model
+cfg.ModelType = 'GMEDS'; % Rayleigh fading model type
+cfg.InitPhase = 'Random'; % Random initial phases
+cfg.NormalizePathGains = 'On'; % Normalize delay profile power
+cfg.NormalizeTxAnts = 'On';    % Normalize for transmit antennas
+
+cec.PilotAverage = 'UserDefined'; % Pilot averaging method
+cec.FreqWindow = 9;     % Frequency averaging window in RES
+cec.TimeWindow = 9;     % Time averaging window in RES
+cec.InterpType = 'Cubic'; % Cubic interpolation
+cec.InterpWinSize = 3;  % Interpolate up to 3 subframes simultaneously
+cec.InterpWindow = 'Centred'; % Interpolation windowing method
+
+gridsize = lteDLResourceGridSize(enb);
+K = gridsize(1); % Number of subcarriers
+L = gridsize(2); % Number of OFDM symbols in one subframe
+P = gridsize(3); % Number of transmit antenna ports
+
+txGrid = [];
+% Number of bits needed is size of resource grid (K*L*P) * bits per symbol (2 for QPSK)
+numberOfBits = K*L*P*2; 
+
+% Create random bit stream
+inputBits = randi([0 1], numberOfBits, 1);
+% Modulate input bits
+inputSym = lteSymbolModulate(inputBits, 'QPSK');
+
+% For all subframes within the frame
+for sf = 0:10
+    enb.NSubframe = mod(sf, 10); % Set subframe number
+    subframe = lteDLResourceGrid(enb); % Generate empty subframe
+    subframe(:) = inputSym; % Map input symbols to grid
+
+    % Generate synchronizing signals
+    pssSym = ltePSS(enb);
+    sssSym = lteSSS(enb);
+    pssInd = ltePSSIndices(enb);
+    sssInd = lteSSSIndices(enb);
+
+    % Map synchronizing signals to the grid
+    subframe(pssInd) = pssSym;
+    subframe(sssInd) = sssSym;
+
+    % Generate cell specific reference signal symbols and indices
+    cellRsSym = lteCellRS(enb);
+    cellRsInd = lteCellRSIndices(enb);
+
+    % Map cell specific reference signal to grid
+    subframe(cellRsInd) = cellRsSym;
+    
+    % Append subframe to grid to be transmitted
+    txGrid = [txGrid subframe]; %#ok
+end
+
+[txWaveform, info] = lteOFDMModulate(enb, txGrid);
+txGrid = txGrid(:, 1:140);
+cfg.SamplingRate = info.SamplingRate;
+
+% Pass data through the fading channel model
+rxWaveform = lteFadingChannel(cfg, txWaveform);
+
+% Calculate noise gain
+N0 = 1/(sqrt(2.0*enb.CellRefP*double(info.Nfft))*SNR);
+
+% Create additive white Gaussian noise
+noise = N0*complex(randn(size(rxWaveform)), randn(size(rxWaveform)));
+
+% Add noise to the received time domain waveform
+rxWaveform = rxWaveform + noise;
+
+% Synchronization
+offset = lteDLFrameOffset(enb, rxWaveform);
+rxWaveform = rxWaveform(1+offset:end, :);
+
+% OFDM Demodulation
+rxGrid = lteOFDMDemodulate(enb, rxWaveform);
+
+enb.NSubframe = 0;
+[estChannel, noiseEst] = lteDLChannelEstimate(enb, cec, rxGrid);
+eqGrid = lteEqualizeMMSE(rxGrid, estChannel, noiseEst);
+
+% Calculate error between transmitted and equalized grid
+eqError = txGrid - eqGrid;
+rxError = txGrid - rxGrid;
+
+% Compute EVM across all input values
+EVM = comm.EVM;
+EVM.AveragingDimensions = [1 2];
+preEqualisedEVM = EVM(txGrid, rxGrid);
+fprintf('Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\\n', preEqualisedEVM);
+
+postEqualisedEVM = EVM(txGrid, eqGrid);
+fprintf('Percentage RMS EVM of Post-Equalized signal: %0.3f%%\\n', postEqualisedEVM);
+
+% Plot the received and equalized resource grids
+hDownlinkEstimationEqualizationResults(rxGrid, eqGrid);`,
+                        output: `Percentage RMS EVM of Pre-Equalized signal: 124.133%
+Percentage RMS EVM of Post-Equalized signal: 15.598%`
+                    },
+                    {
+                        id: 3,
+                        title: "3. Pulse Shaping",
+                        code: `% PULSE SHAPING
+M = 16; % Modulation order
+k = log2(M); % Bits per symbol
+numBits = k*7.5e4; % Bits to process
+sps = 4; % Samples per symbol (oversampling factor)
+filtlen = 10; % Filter length in symbols
+rolloff = 0.25; % Filter rolloff factor
+
+rrcFilter = rcosdesign(rolloff, filtlen, sps);
+fvtool(rrcFilter, 'Analysis', 'Impulse');
+
+rng default; % Default random number generator
+dataIn = randi([0 1], numBits, 1); % Generate vector of binary data
+dataSymbolsIn = bit2int(dataIn, k);
+dataMod = qammod(dataSymbolsIn, M);
+
+txFiltSignal = upfirdn(dataMod, rrcFilter, sps, 1);
+
+EbNo = 10;
+snr = convertSNR(EbNo, 'ebno', ...
+    'SamplesPerSymbol', sps, ...
+    'BitsPerSymbol', k);
+
+rxSignal = awgn(txFiltSignal, snr, 'measured');
+rxFiltSignal = upfirdn(rxSignal, rrcFilter, 1, sps); % Downsample and filter
+
+rxFiltSignal = rxFiltSignal(filtlen + 1:end - filtlen); % Account for delay
+
+dataSymbolsOut = qamdemod(rxFiltSignal, M);
+dataOut = int2bit(dataSymbolsOut, k);
+
+[numErrors, ber] = biterr(dataIn, dataOut);
+fprintf('\\nFor an EbNo setting of %3.1f dB, the bit error rate is %5.2e, based on %d errors.\\n', ...
+    EbNo, ber, numErrors);
+
+EbNo = 20;
+snr = convertSNR(EbNo, 'ebno', ...
+    'SamplesPerSymbol', sps, ...
+    'BitsPerSymbol', k);
+
+rxSignal = awgn(txFiltSignal, snr, 'measured');
+rxFiltSignal = upfirdn(rxSignal, rrcFilter, 1, sps); % Downsample and filter
+rxFiltSignal = rxFiltSignal(filtlen + 1:end - filtlen); % Account for delay
+
+% Eye Diagrams
+eyediagram(txFiltSignal(1:2000), sps*2);
+eyediagram(rxSignal(1:2000), sps*2);
+eyediagram(rxFiltSignal(1:2000), 2);
+
+% Scatter Plot
+scatplot = scatterplot(sqrt(sps)*rxSignal(1:sps*5e3), sps, 0);
+hold on;
+scatterplot(rxFiltSignal(1:5e3), 1, 0, 'bx', scatplot);
+title('Received Signal, Before and After Filtering');
+legend('Before Filtering', 'After Filtering');
+axis([-5 5 -5 5]); % Set axis range
+hold off;`,
+                        output: `For an EbNo setting of 10.0 dB, the bit error rate is 0.00e+00, based on 0 errors.
+
+(Generates Eye Diagrams and Scatter Plots)`
+                    },
+                    {
+                        id: 4,
+                        title: "4. OFDM Transmitter and Receiver",
+                        code: `% OFDM Transmitter and receiver
+clear all
+clc
+close all
+
+% A: Setting Parameters
+M = 4;
+no_of_data_points = 64;
+block_size = 8; % size of each ofdm block
+cp_len = ceil(0.1*block_size); % length of cyclic prefix
+no_of_ifft_points = block_size; % 8 points for the FFT/IFFT
+no_of_fft_points = block_size;
+
+% B: TRANSMITTER
+% 1. Generate 1x64 vector of random data points
+data_source = randsrc(1, no_of_data_points, 0:M-1);
+figure(1)
+stem(data_source); grid on; xlabel('Data Points');
+ylabel('Amplitude'); title('Transmitted Data "O"');
+
+% 2. Perform QPSK modulation
+qpsk_modulated_data = pskmod(data_source, M);
+scatterplot(qpsk_modulated_data); title('MODULATED TRANSMITTED DATA');
+
+% 3. Do IFFT on each block
+% Make the serial stream a matrix where each column represents a pre-OFDM block
+num_cols = length(qpsk_modulated_data)/block_size;
+data_matrix = reshape(qpsk_modulated_data, block_size, num_cols);
+
+% Create empty matrix to put the IFFT'd data
+cp_start = block_size - cp_len;
+cp_end = block_size;
+
+% Operate columnwise & do CP
+for i = 1:num_cols
+    ifft_data_matrix(:,i) = ifft(data_matrix(:,i), no_of_ifft_points);
+    % Compute and append Cyclic Prefix
+    for j = 1:cp_len
+        actual_cp(j,i) = ifft_data_matrix(j+cp_start, i);
+    end
+    % Append the CP to the existing block to create the actual OFDM block
+    ifft_data(:,i) = vertcat(actual_cp(:,i), ifft_data_matrix(:,i));
+end
+
+% 4. Convert to serial stream for transmission
+[rows_ifft_data, cols_ifft_data] = size(ifft_data);
+len_ofdm_data = rows_ifft_data * cols_ifft_data;
+
+% Actual OFDM signal to be transmitted
+ofdm_signal = reshape(ifft_data, 1, len_ofdm_data);
+figure(3)
+plot(real(ofdm_signal)); xlabel('Time'); ylabel('Amplitude');
+title('OFDM Signal'); grid on;
+
+% C: HPA
+% Add random complex noise when power exceeds avg value
+noise = randn(1, len_ofdm_data) + sqrt(-1)*randn(1, len_ofdm_data);
+
+% Transmitted OFDM signal after passing through HPA
+avg = 0.4;
+for i = 1:length(ofdm_signal)
+    if ofdm_signal(i) > avg
+        ofdm_signal(i) = ofdm_signal(i) + noise(i);
+    end
+    if ofdm_signal(i) < -avg
+        ofdm_signal(i) = ofdm_signal(i) + noise(i);
+    end
+end
+
+figure(4)
+plot(real(ofdm_signal)); xlabel('Time'); ylabel('Amplitude');
+title('OFDM Signal after HPA'); grid on;
+
+% D: CHANNEL
+% Create a complex multipath channel
+channel = randn(1, block_size) + sqrt(-1)*randn(1, block_size);
+
+% E: RECEIVER
+% 1. Pass the ofdm signal through the channel
+after_channel = filter(channel, 1, ofdm_signal);
+
+% 2. Add Noise
+awgn_noise = awgn(zeros(1, length(after_channel)), 0);
+% 3. Add noise to signal
+recvd_signal = awgn_noise + after_channel;
+
+% 4. Convert Data back to "parallel" form to perform FFT
+recvd_signal_matrix = reshape(recvd_signal, rows_ifft_data, cols_ifft_data);
+
+% 5. Remove CP
+recvd_signal_matrix(1:cp_len, :) = [];
+
+% 6. Perform FFT
+for i = 1:cols_ifft_data
+    fft_data_matrix(:,i) = fft(recvd_signal_matrix(:,i), no_of_fft_points);
+end
+
+% 7. Convert to serial stream
+recvd_serial_data = reshape(fft_data_matrix, 1, (block_size*num_cols));
+scatterplot(recvd_serial_data); 
+title('MODULATED RECEIVED D
