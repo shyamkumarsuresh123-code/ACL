@@ -14,7 +14,7 @@
             --accent: #d16d08;
             --accent-hover: #b55d06;
             --code-bg: #1e1e1e;
-            --output-bg: #000000;
+            --output-bg: #111111;
         }
 
         body {
@@ -114,7 +114,8 @@
             background-color: var(--code-bg);
             display: flex;
             flex-direction: column;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
+            flex-shrink: 0; /* Prevent shrinking */
         }
 
         .section-header {
@@ -153,17 +154,16 @@
             font-size: 0.9rem;
             line-height: 1.5;
             white-space: pre-wrap; 
-            max-height: 400px;
+            max-height: 300px;
         }
 
-        #codeDisplay {
-            color: #dcdcaa;
-        }
+        #codeDisplay { color: #dcdcaa; }
+        #consoleDisplay { color: #4ec9b0; background-color: #000; }
 
         /* Output Image Area */
         .output-gallery {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 15px;
             padding: 20px;
             background-color: #111;
@@ -180,7 +180,11 @@
             width: 100%;
             height: auto;
             display: block;
+            opacity: 0.8;
+            transition: opacity 0.3s;
         }
+        
+        .output-card img:hover { opacity: 1; }
 
         .output-card p {
             padding: 10px;
@@ -232,9 +236,16 @@
             <pre id="codeDisplay"></pre>
         </div>
 
+        <div class="section-container" id="consoleSection" style="display: none;">
+            <div class="section-header">
+                <span>Console Output</span>
+            </div>
+            <pre id="consoleDisplay"></pre>
+        </div>
+
         <div class="section-container" id="outputSection" style="display: none;">
             <div class="section-header">
-                <span>Output Plots</span>
+                <span>Expected Plots</span>
             </div>
             <div class="output-gallery" id="outputGallery"></div>
         </div>
@@ -243,14 +254,12 @@
     <script>
         window.onload = function() {
             try {
-                // DATA: Code extracted from PDF + Image placeholders
-                // Note: Real images cannot be embedded directly from PDF in this text format.
-                // I have used cropped screenshots from your PDF as base64 placeholders or descriptions where applicable.
-                
+                // EXPERIMENT DATA
                 const experiments = [
                     {
                         id: 1,
                         title: "1. Fading and Doppler Effects",
+                        consoleOutput: "Plots Generated:\n1. Impulse and Frequency Responses (High Sample Rate)\n2. Doppler Spectrum\n3. Impulse and Frequency Responses (Low Sample Rate)\n4. Multipath Gain comparison (Rayleigh vs Rician)\n\n(No text output for this experiment)",
                         code: `% Fading and Doppler effects
 sampleRate500KHz = 500e3; % Sample rate of 500 KHz
 sampleRate20KHz = 20e3;   % Sample rate of 20 KHz
@@ -367,14 +376,15 @@ modSignal = pskmod(msg, M, phaseoffset, 'InputType', 'bit');
 
 gainScope(10*log10(abs([rayPathGain, ricPathGain]).^2));`,
                         images: [
-                            { src: "https://i.ibb.co/68v8z9k/fading1.png", desc: "Impulse Response (Rayleigh)" },
-                            { src: "https://i.ibb.co/MhjFp0D/fading2.png", desc: "Doppler Spectrum" },
-                            { src: "https://i.ibb.co/3W6qW5G/fading3.png", desc: "Multipath Gain (Rayleigh vs Rician)" }
+                            { src: "https://placehold.co/600x400/222/FFF?text=Impulse+Response", desc: "Impulse Response (Rayleigh)" },
+                            { src: "https://placehold.co/600x400/222/FFF?text=Doppler+Spectrum", desc: "Doppler Spectrum" },
+                            { src: "https://placehold.co/600x400/222/FFF?text=Multipath+Gain", desc: "Multipath Gain (Rayleigh vs Rician)" }
                         ]
                     },
                     {
                         id: 2,
                         title: "2. Channel Estimation (LTE)",
+                        consoleOutput: "Percentage RMS EVM of Pre-Equalized signal: 124.133%\nPercentage RMS EVM of Post-Equalized signal: 15.598%",
                         code: `% CHANNEL ESTIMATION
 enb.NDLRB = 15;         % Number of resource blocks
 enb.CellRefP = 1;       % One transmit antenna port
@@ -489,13 +499,14 @@ fprintf('Percentage RMS EVM of Post-Equalized signal: %0.3f%%\\n', postEqualised
 % Plot the received and equalized resource grids
 hDownlinkEstimationEqualizationResults(rxGrid, eqGrid);`,
                         images: [
-                            { src: "https://i.ibb.co/ZmrVz9W/chanest1.png", desc: "Received Resource Grid" },
-                            { src: "https://i.ibb.co/30V5wTz/chanest2.png", desc: "Equalized Resource Grid" }
+                            { src: "https://placehold.co/600x400/222/FFF?text=Received+Resource+Grid", desc: "Received Resource Grid (3D)" },
+                            { src: "https://placehold.co/600x400/222/FFF?text=Equalized+Resource+Grid", desc: "Equalized Resource Grid (3D)" }
                         ]
                     },
                     {
                         id: 3,
                         title: "3. Pulse Shaping",
+                        consoleOutput: "For an EbNo setting of 10.0 dB, the bit error rate is 0.00e+00, based on 0 errors.",
                         code: `% PULSE SHAPING
 M = 16; % Modulation order
 k = log2(M); % Bits per symbol
@@ -554,14 +565,15 @@ legend('Before Filtering', 'After Filtering');
 axis([-5 5 -5 5]); % Set axis range
 hold off;`,
                         images: [
-                            { src: "https://i.ibb.co/KjqYgV0/pulse1.png", desc: "Impulse Response" },
-                            { src: "https://i.ibb.co/xL3nC4M/pulse2.png", desc: "Eye Diagram (In-Phase)" },
-                            { src: "https://i.ibb.co/0j2zZ0w/pulse3.png", desc: "Received Signal Constellation" }
+                            { src: "https://placehold.co/600x400/222/FFF?text=Impulse+Response", desc: "Impulse Response" },
+                            { src: "https://placehold.co/600x400/222/FFF?text=Eye+Diagram+(In-Phase)", desc: "Eye Diagram (In-Phase)" },
+                            { src: "https://placehold.co/600x400/222/FFF?text=Signal+Constellation", desc: "Received Signal Constellation" }
                         ]
                     },
                     {
                         id: 4,
                         title: "4. OFDM Transmitter and Receiver",
+                        consoleOutput: "Plots Generated:\n1. Transmitted Data Stem Plot\n2. OFDM Signal Time Domain\n3. Received Data Stem Plot\n\n(No numerical text output)",
                         code: `% OFDM Transmitter and receiver
 clear all
 clc
@@ -670,9 +682,9 @@ figure(5)
 stem(qpsk_demodulated_data, 'rx');
 grid on; xlabel('Data Points'); ylabel('Amplitude'); title('Received Data "X"');`,
                         images: [
-                            { src: "https://i.ibb.co/h7n2V9s/ofdm1.png", desc: "Transmitted Data Stem Plot" },
-                            { src: "https://i.ibb.co/5GrrRj1/ofdm2.png", desc: "OFDM Signal Time Domain" },
-                            { src: "https://i.ibb.co/r2dJq6B/ofdm3.png", desc: "Received Data Stem Plot" }
+                            { src: "https://placehold.co/600x400/222/FFF?text=Transmitted+Data", desc: "Transmitted Data Stem Plot" },
+                            { src: "https://placehold.co/600x400/222/FFF?text=OFDM+Signal", desc: "OFDM Signal Time Domain" },
+                            { src: "https://placehold.co/600x400/222/FFF?text=Received+Data", desc: "Received Data Stem Plot" }
                         ]
                     }
                 ];
@@ -680,9 +692,11 @@ grid on; xlabel('Data Points'); ylabel('Amplitude'); title('Received Data "X"');
                 const expListEl = document.getElementById('expList');
                 const expTitle = document.getElementById('expTitle');
                 const codeDisplay = document.getElementById('codeDisplay');
+                const consoleDisplay = document.getElementById('consoleDisplay');
                 const outputGallery = document.getElementById('outputGallery');
                 const placeholder = document.getElementById('placeholder');
                 const codeSection = document.getElementById('codeSection');
+                const consoleSection = document.getElementById('consoleSection');
                 const outputSection = document.getElementById('outputSection');
 
                 // Initial clear
@@ -708,30 +722,25 @@ grid on; xlabel('Data Points'); ylabel('Amplitude'); title('Received Data "X"');
                     // Show content sections
                     placeholder.style.display = 'none';
                     codeSection.style.display = 'flex';
+                    consoleSection.style.display = 'flex';
                     outputSection.style.display = 'block';
 
-                    // Set Text
+                    // Set Content
                     expTitle.textContent = exp.title;
                     codeDisplay.textContent = exp.code;
+                    consoleDisplay.textContent = exp.consoleOutput;
 
-                    // Generate Images
+                    // Generate Images (using placeholders)
                     outputGallery.innerHTML = '';
                     if(exp.images && exp.images.length > 0) {
                         exp.images.forEach(imgData => {
                             const card = document.createElement('div');
                             card.className = 'output-card';
                             
-                            // Note: Using placeholders since I cannot save real images to user disk from this chat
-                            // In a real scenario, you'd replace the src with actual local paths
                             const img = document.createElement('img');
                             img.src = imgData.src; 
                             img.alt = imgData.desc;
                             
-                            // Fallback for missing images
-                            img.onerror = function() {
-                                this.parentElement.innerHTML = `<div style="padding:40px;text-align:center;color:#666">[Image: ${imgData.desc}]<br><small>Image placeholder</small></div>`;
-                            };
-
                             const p = document.createElement('p');
                             p.textContent = imgData.desc;
 
